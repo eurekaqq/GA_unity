@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using GBGA;
 
-public class GA  {
+public class GA {
 
     public GameObject spots;
     public Spot spot;
