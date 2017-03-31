@@ -46,8 +46,8 @@ namespace GBGA {
             private set;
         }
 
-        private List<gene<T>> currentGenes = new List<gene<T>>();
-        private List<gene<T>> newGenes = new List<gene<T>>();
+        protected List<gene<T>> currentGenes = new List<gene<T>>();
+        protected List<gene<T>> newGenes = new List<gene<T>>();
 
         public myGA(int number = 10, double CrossoverRate = 0.02, double MutationRate = 0.01) {
             this.number = number;
@@ -81,9 +81,11 @@ namespace GBGA {
                     newGenes.Add(target2);
                 }
             }
+            currentGenes = newGenes;
+            newGenes = new List<gene<T>>();
         }
 
-        private int selection() {
+        protected int selection() {
             double sum = default(double);
             List<double> wheel = new List<double>();
             wheel.Add(sum);//add 0.0f
