@@ -12,11 +12,15 @@ public class EricGA : MonoBehaviour
         myList[index2] = temp;
     }
 
+    public const int initLoad = 100;
+
     public class Chromosome
     {
         public List<Spot> spots;
 
         float fitnessValue;
+
+        float notEnough;
 
         public Chromosome(Chromosome chromosome)
         {
@@ -36,10 +40,15 @@ public class EricGA : MonoBehaviour
         public float fitness()
         {
             float sumOfDistance = 0.0f;
+            float load = initLoad;
             for (int i = 0; i < spots.Count; ++i)
             {
                 sumOfDistance += (spots[i].transform.position - spots[(i + 1) % spots.Count].transform.position).magnitude;
+                load += spots[i].load;
+                if (load < 0)
+                    return 0.0001f;
             }
+            
             fitnessValue = 100.0f / (sumOfDistance + 1);
             return fitnessValue;
         }
@@ -51,12 +60,23 @@ public class EricGA : MonoBehaviour
     public List<Spot> spots = new List<Spot>();
     public List<Chromosome> chromosomes = new List<Chromosome>();
 
-    float CrossoverRate = 0.95f, MutationRate = 0.05f;
-    int countOfGeneration = 2500, countOfChromosome = 500;
+    float CrossoverRate = 0.95f, MutationRate = 0.025f;
+    int countOfGeneration = 2000, countOfChromosome = 500;
+
+    int possibleClickSize = 5;
+    List<Vector3> range = new List<Vector3>();
+
 
     void Start () {
         lineHandler = Instantiate(lineHandler.gameObject).gameObject.GetComponent<EricLineHandler>();
         spots = new List<Spot>();
+        
+
+        range.Add(new Vector3(-possibleClickSize, -possibleClickSize, 0));
+        range.Add(new Vector3(-possibleClickSize, possibleClickSize, 0));
+        range.Add(new Vector3(possibleClickSize, possibleClickSize, 0));
+        range.Add(new Vector3(possibleClickSize, -possibleClickSize, 0));
+        range.Add(new Vector3(-possibleClickSize, -possibleClickSize, 0));
     }
 
     public void addSpot()
@@ -68,6 +88,17 @@ public class EricGA : MonoBehaviour
         sp.transform.position = new Vector3(Random.Range(-5.0f, 5.0f), Random.Range(-5.0f, 5.0f), 0);
         sp.transform.SetParent(spotsParrent.transform);
         spots.Add(sp);
+
+        int load = initLoad;
+
+        for(int i = 0; i < spots.Count; i++)
+        {
+            if (i != spots.Count - 1)
+                spots[i].load = Random.Range(-100, 100);
+            else
+                spots[i].load = -load;
+            load += spots[i].load;
+        }
     }
 
     public void algorithm() {
@@ -109,6 +140,14 @@ public class EricGA : MonoBehaviour
 
         for (int i = 0; i < chromosome.spots.Count; i++)
         {
+            if(i == 1)
+                chromosome.spots[i].GetComponent<MeshRenderer>().material.color = Color.grey;
+            else if(i == 0)
+                chromosome.spots[i].GetComponent<MeshRenderer>().material.color = Color.blue;
+            else
+                chromosome.spots[i].GetComponent<MeshRenderer>().material.color = Color.black;
+
+
             line.Add(chromosome.spots[i].transform.position);
         }
         line.Add(chromosome.spots[0].transform.position);
@@ -194,5 +233,37 @@ public class EricGA : MonoBehaviour
             debugMessage += ",fitnessValue: " + chromosome.fitness() + "\n";
         }
         Debug.Log(debugMessage);
+    }
+
+    private void Update()
+    {
+        lineHandler.clearLines(EricLineHandler.LINE_TYPE.DYNAMIC);
+        lineHandler.drawPointsList(range, EricLineHandler.LINE_TYPE.DYNAMIC, Color.white);
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+
+            if (Mathf.Abs(ray.origin.x) < possibleClickSize && Mathf.Abs(ray.origin.y) < possibleClickSize)
+            {
+                lineHandler.clearLines(EricLineHandler.LINE_TYPE.STATIC);
+                Spot sp = Instantiate(spot);
+                sp.spotID = spots.Count;
+                spot.name = "Spot" + sp.spotID;
+                sp.transform.position = new Vector3(ray.origin.x, ray.origin.y, 0);
+                sp.transform.SetParent(spotsParrent.transform);
+                spots.Add(sp);
+
+                int load = initLoad;
+
+                for (int i = 0; i < spots.Count; i++)
+                {
+                    if (i != spots.Count - 1)
+                        spots[i].load = Random.Range(-100, 100);
+                    else
+                        spots[i].load = -load;
+                    load += spots[i].load;
+                }
+            }
+        }
     }
 }
