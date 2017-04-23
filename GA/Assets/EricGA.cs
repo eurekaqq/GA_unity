@@ -12,7 +12,9 @@ public class EricGA : MonoBehaviour
         myList[index2] = temp;
     }
 
-    public const int initLoad = 100;
+    public const int initLoad = 0;
+
+    public const int carLoadUpperBound = 100;
 
     public class Chromosome
     {
@@ -45,7 +47,7 @@ public class EricGA : MonoBehaviour
             {
                 sumOfDistance += (spots[i].transform.position - spots[(i + 1) % spots.Count].transform.position).magnitude;
                 load += spots[i].load;
-                if (load < 0)
+                if (load < 0 || load > carLoadUpperBound)
                     return 0.0001f;
             }
             
@@ -61,7 +63,7 @@ public class EricGA : MonoBehaviour
     public List<Chromosome> chromosomes = new List<Chromosome>();
 
     float CrossoverRate = 0.95f, MutationRate = 0.025f;
-    int countOfGeneration = 2000, countOfChromosome = 500;
+    int countOfGeneration = 1000, countOfChromosome = 500;
 
     int possibleClickSize = 5;
     List<Vector3> range = new List<Vector3>();
@@ -91,7 +93,7 @@ public class EricGA : MonoBehaviour
 
         int load = initLoad;
 
-        for(int i = 0; i < spots.Count; i++)
+        for(int i = 1; i < spots.Count; i++)
         {
             if (i != spots.Count - 1)
                 spots[i].load = Random.Range(-100, 100);
@@ -255,10 +257,21 @@ public class EricGA : MonoBehaviour
 
                 int load = initLoad;
 
-                for (int i = 0; i < spots.Count; i++)
+                spots[0].load = 0;
+
+                for (int i = 1; i < spots.Count; i++)
                 {
                     if (i != spots.Count - 1)
-                        spots[i].load = Random.Range(-100, 100);
+                    {
+                        int upperBound = 100, lowerBound = -100;
+
+                        if (load >= 0)
+                            upperBound -= load;
+                        else
+                            lowerBound -= load;
+
+                        spots[i].load = Random.Range(lowerBound, upperBound);
+                    }
                     else
                         spots[i].load = -load;
                     load += spots[i].load;
